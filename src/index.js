@@ -36,7 +36,7 @@ async function main() {
   const markets = await exchange.loadMarkets();
   // coinbase.verbose = true // uncomment for debugging purposes if necessary
   const balance = await fetchAllBalances(exchange);
-  console.log(balance);
+  return balance;
 }
 
 main();
