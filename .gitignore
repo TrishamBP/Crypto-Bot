@@ -5,6 +5,7 @@ var
 node_modules/
 npm-debug.log*
 .env
+config/
 # Mac OS X
 .DS_Store
 
