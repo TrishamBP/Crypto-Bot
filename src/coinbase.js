@@ -82,9 +82,8 @@ async function get_last_prices() {
 
 // Bot
 async function ArbitrageSoftwareBot() {
-  let get_last_price = await get_last_prices();
-
   for (let i = 0; i < symbols.length; i++) {
+    let get_last_price = await get_last_prices();
     const prices = {};
     let min_price = [];
     let max_price = [];
@@ -94,7 +93,7 @@ async function ArbitrageSoftwareBot() {
       symbol_prices.push(get_last_price[j][symbols[i]].last);
       prices[symbols[i]] = symbol_prices;
     }
-    console.log(prices);
+    console.log(prices[symbols[i]]);
   }
 }
 ArbitrageSoftwareBot();
