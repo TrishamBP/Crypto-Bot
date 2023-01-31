@@ -2,8 +2,9 @@
 const ccxt = require("ccxt"),
   asTable = require("as-table"),
   log = require("ololog").configure({ locate: false }),
-  {} = require("ansicolor").nice;
+  { ansicolor } = require("ansicolor").nice;
 const config = require("../../../config/config.json");
+const clc = require("cli-clear");
 // Importing coinbase parameters from config
 const coinbaseapiKEY = config.Coinbase.API_KEY;
 const coinbaseSecret = config.Coinbase.API_SECRET;
@@ -62,10 +63,11 @@ async function get_last_prices() {
   }
   return tasks;
 }
-
+let displayTableData = [];
 // Bot
 async function ArbitrageSoftwareBot() {
   let get_last_price = await get_last_prices();
+
   for (let i = 0; i < symbols.length; i++) {
     const prices = {};
     const symbol_prices = [];
@@ -74,7 +76,6 @@ async function ArbitrageSoftwareBot() {
       symbol_prices.push(get_last_price[j][symbols[i]].last);
       prices[symbols[i]] = symbol_prices;
     }
-    console.log(symbol_prices);
     symbol_prices.reduce((a, b) => a + b, 2);
     let min_price = Math.min(Number.parseFloat([...symbol_prices]));
     let max_price = Math.max(Number.parseFloat([...symbol_prices]));
@@ -96,6 +97,14 @@ async function ArbitrageSoftwareBot() {
 
     let price_profit = max_price - min_price;
     let profit = price_profit * order_size - min_fee - max_fee;
+
+    // Setting Values for the table
+    displayTableData.push({
+      time: Date.now(),
+      symbol: symbols[i],
+      profit: profit,
+    });
+
     // Please understand this bot does not take into consideration account slippage or order book depths
     // Use traingular arbitrage bot instead
     if (profit > 0) {
@@ -129,6 +138,22 @@ async function ArbitrageSoftwareBot() {
     }
   }
 }
+
+// Display Table Data
+async function displayTable() {
+  let table = log(
+    asTable(
+      displayTableData.map((item) => {
+        let color = item.profit > 0 ? ansicolor.green : ansicolor.red;
+        return {
+          time: item.time,
+          symbol: item.symbol,
+          profit: color(item.profit),
+        };
+      })
+    )
+  );
+}
 // Checking if the exchange has fetchTickers functionality
 async function checkRequirements() {
   console.log(
@@ -159,10 +184,10 @@ async function main() {
   while (true) {
     try {
       await callAfterSeconds(ArbitrageSoftwareBot);
+      await callAfterSeconds(displayTable);
     } catch (e) {
       console.log(e);
     }
   }
 }
-
 main();
