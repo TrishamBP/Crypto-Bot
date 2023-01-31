@@ -3,7 +3,7 @@ const ccxt = require("ccxt"),
   asTable = require("as-table"),
   log = require("ololog").configure({ locate: false }),
   {} = require("ansicolor").nice;
-const config = require("../config/config.json");
+const config = require("../../../config/config.json");
 // Importing coinbase parameters from config
 const coinbaseapiKEY = config.Coinbase.API_KEY;
 const coinbaseSecret = config.Coinbase.API_SECRET;
