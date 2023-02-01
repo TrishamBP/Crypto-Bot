@@ -75,6 +75,7 @@ async function ArbitrageSoftwareBot() {
     let max_fee = order_size * max_price * max_exchange_fee;
 
     let price_profit = max_price - min_price;
+    // Formula the bot uses to calculate the profit
     let profit = price_profit * order_size - min_fee - max_fee;
 
     // Setting Values for the table
