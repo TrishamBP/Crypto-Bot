@@ -3,7 +3,7 @@ const ccxt = require("ccxt"),
   { ansicolor } = require("ansicolor").nice;
 const config = require("../../../config/ArbitrageSpot.json");
 const clc = require("cli-clear");
-
+const Utils = require("../Utils/CheckRequirements");
 //////////////////////////////////////////////////////////////
 // Arbitrage bot that will look for arbitrage opportunities //
 // on spot markets and execute them at market price         //
@@ -35,54 +35,73 @@ const order_sizes = config.Arbitrage.OrderSize; // Order Sizes
 async function get_last_prices() {
   const tasks = [];
   for (let i = 0; i < exchanges.length; i++) {
+    await exchanges[i].loadMarkets(); // Loading markets
     let ticker = await exchanges[i].fetchTickers(symbols);
     tasks.push(ticker);
   }
   return tasks;
 }
-let displayTableData = [];
+//
+
 // Bot
 async function ArbitrageSoftwareBot() {
   let get_last_price = await get_last_prices();
-
   for (let i = 0; i < symbols.length; i++) {
     const prices = {};
     const symbol_prices = [];
     let ms = Number.parseFloat(Date.now * 1000);
+    let order_size,
+      min_index,
+      max_index,
+      max_exchange,
+      min_exchange,
+      max_exchange_fee,
+      min_fee,
+      min_exchange_fee,
+      max_fee,
+      price_profit,
+      profit;
+    let max_price = symbol_prices[0],
+      min_price = symbol_prices[0];
     for (let j = 0; j < get_last_price.length; j++) {
       symbol_prices.push(get_last_price[j][symbols[i]].last);
       prices[symbols[i]] = symbol_prices;
     }
-    symbol_prices.reduce((a, b) => a + b, 2);
-    let min_price = Math.min(Number.parseFloat([...symbol_prices]));
-    let max_price = Math.max(Number.parseFloat([...symbol_prices]));
-    let order_size = order_sizes[symbols[i]];
-    let min_index = symbol_prices.indexOf(min_price);
-    let min_exchange = exchangesId[min_index];
-    let max_index = symbol_prices.indexOf(max_price);
-    let max_exchange = exchangesId[max_index];
+    for (let i = 0; i < symbol_prices.length; i++) {
+      // If we get any element in array greater
+      // than max, max takes value of that
+      // larger number
+      if (symbol_prices[i] > max_price) {
+        max_price = symbol_prices[i];
+      }
+      // If we get any element in array smaller
+      // than min, min takes value of that
+      // smaller number
+      if (symbol_prices[i] < min_price) {
+        min_price = symbol_prices[i];
+      }
+    }
+    // min_price = Math.min(Number.parseFloat([...symbol_prices]));
+    // max_price = Math.max(Number.parseFloat([...symbol_prices]));
+    order_size = order_sizes[symbols[i]];
+    min_index = symbol_prices.indexOf(min_price);
+    min_exchange = exchangesId[min_index];
+    max_index = symbol_prices.indexOf(max_price);
+    max_exchange = exchangesId[max_index];
 
     // Calculate min exchange taker fee
     // Warning you need to manually check if there are special campaign fees
-    let min_exchange_fee = exchanges[min_index].fees.trading.taker;
-    let min_fee = order_size * min_price * min_exchange_fee;
+    min_exchange_fee = exchanges[min_index].fees.trading.taker;
+    min_fee = order_size * min_price * min_exchange_fee;
 
     // Calculate max exchange taker fee
     // Warning you need to manually check if there are special campaign fees
-    let max_exchange_fee = exchanges[max_index].fees.trading.taker;
-    let max_fee = order_size * max_price * max_exchange_fee;
+    max_exchange_fee = exchanges[max_index].fees.trading.taker;
+    max_fee = order_size * max_price * max_exchange_fee;
 
-    let price_profit = max_price - min_price;
+    price_profit = max_price - min_price;
     // Formula the bot uses to calculate the profit
-    let profit = price_profit * order_size - min_fee - max_fee;
-
-    // Setting Values for the table
-    displayTableData.push({
-      time: Date.now(),
-      symbol: symbols[i],
-      profit: profit + ` ${symbols[i]}`,
-      message: "No Arbitrage Opportunity",
-    });
+    profit = price_profit * order_size - min_fee - max_fee;
 
     // Please understand this bot does not take into consideration account slippage or order book depths
     // Use traingular arbitrage bot instead
@@ -120,19 +139,6 @@ async function ArbitrageSoftwareBot() {
     }
   }
 }
-// Checking if the exchange has fetchTickers functionality
-async function checkRequirements() {
-  console.log(
-    "Checking if exchanges support fetchTickers and the symbols bot wants to trade"
-  );
-  for (let i = 0; i < exchanges.length; i++) {
-    if (!exchanges[i].fetchTickers(symbols)) {
-      console.log(`${exchangesId[i]} does not support fetchTickers`);
-      return;
-    }
-  }
-  console.log("Checks Complete,Initializing Bot............");
-}
 // Function which fetches data after specific period of time
 async function callAfterSeconds(func) {
   return new Promise((resolve) => {
@@ -148,7 +154,7 @@ async function callAfterSeconds(func) {
 // The Main function
 async function main() {
   clc();
-  await checkRequirements();
+  await Utils.checkRequirements();
   console.log("Starting Bot.......");
   while (true) {
     try {
