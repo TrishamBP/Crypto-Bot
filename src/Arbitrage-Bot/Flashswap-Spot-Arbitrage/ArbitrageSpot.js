@@ -61,12 +61,13 @@ async function ArbitrageSoftwareBot() {
       max_fee,
       price_profit,
       profit;
-    let max_price = symbol_prices[0],
-      min_price = symbol_prices[0];
+
     for (let j = 0; j < get_last_price.length; j++) {
       symbol_prices.push(get_last_price[j][symbols[i]].last);
       prices[symbols[i]] = symbol_prices;
     }
+    let max_price = symbol_prices[0],
+      min_price = symbol_prices[0];
     for (let i = 0; i < symbol_prices.length; i++) {
       // If we get any element in array greater
       // than max, max takes value of that
