@@ -3,16 +3,20 @@ const ccxt = require("ccxt"),
   asTable = require("as-table"),
   log = require("ololog").configure({ locate: false }),
   { ansicolor } = require("ansicolor").nice;
-const config = require("../../../config/config.json");
+const config = require("../../../config/ArbitrageSpot.json");
 const clc = require("cli-clear");
-// Importing coinbase parameters from config
-const coinbaseapiKEY = config.Coinbase.API_KEY;
-const coinbaseSecret = config.Coinbase.API_SECRET;
+
+//////////////////////////////////////////////////////////////
+// Arbitrage bot that will look for arbitrage opportunities //
+// on spot markets and execute them at market price         //
+//////////////////////////////////////////////////////////////
+
 // Bot Options
 const wait_time = 5; // seconds to wait between each check
 const paper_trading = true; // set to false to actually execute trades
 
 // Exchanges to look for arbitrage opportunities
+// To execute trades provide API_KEYS and Secret as paramters while to trade
 const exchanges = [
   new ccxt.okx(),
   new ccxt.bybit({ options: { defaultType: "spot" } }),
@@ -21,39 +25,14 @@ const exchanges = [
   new ccxt.bitmart(),
   new ccxt.gate(),
   new ccxt.huobi(),
-  new ccxt.coinbase({ apiKey: coinbaseapiKEY, secret: coinbaseSecret }),
+  new ccxt.coinbase({
+    apiKey: config.Arbitrage.Exchanges.Coinbase.API_KEY,
+    secret: config.Arbitrage.Exchanges.Coinbase.API_SECRET,
+  }),
 ];
-const exchangesId = [
-  "okx",
-  "bybit",
-  "binance",
-  "kucoin",
-  "bitmart",
-  "gate",
-  "huobi",
-  "coinbase",
-];
-// Symbols
-const symbols = [
-  "BTC/USDT",
-  "DOGE/USDT",
-  "SHIB/USDT",
-  "SOL/USDT",
-  "ETH/USDT",
-  "ADA/USDT",
-  "DOT/USDT",
-  "LINK/USDT",
-];
-const order_sizes = {
-  "BTC/USDT": 0.001,
-  "DOGE/USDT": 100,
-  "SHIB/USDT": 1000000,
-  "SOL/USDT": 0.1,
-  "ETH/USDT": 0.01,
-  "ADA/USDT": 1,
-  "DOT/USDT": 0.1,
-  "LINK/USDT": 0.1,
-};
+const exchangesId = config.Arbitrage.ExchangesId; // Exchange id
+const symbols = config.Arbitrage.Symbols; // Symbols which bot can trade
+const order_sizes = config.Arbitrage.OrderSize; // Order Sizes
 // Get the latest prices
 async function get_last_prices() {
   const tasks = [];
@@ -102,7 +81,8 @@ async function ArbitrageSoftwareBot() {
     displayTableData.push({
       time: Date.now(),
       symbol: symbols[i],
-      profit: profit,
+      profit: profit + ` ${symbols[i]}`,
+      message: "No Arbitrage Opportunity",
     });
 
     // Please understand this bot does not take into consideration account slippage or order book depths
@@ -130,29 +110,17 @@ async function ArbitrageSoftwareBot() {
         console.log("Orders Executed Successfully");
       }
     } else {
+      let table = "Time(ms)\tSymbol\tProfit\tMessage\n";
+      let color = profit > 0 ? ansicolor.green : ansicolor.red;
+      let time_now = Date.now() * 1000;
       console.log(
-        Date.now() * 1000,
-        symbols[i],
-        "No Arbitrage Opportunity Found"
+        time_now.toFixed(6),
+        `| ${symbols[i].padEnd(2)}`,
+        `| Current Profit: ${color(profit)}`,
+        "|  No Arbitrage Opportunity Found"
       );
     }
   }
-}
-
-// Display Table Data
-async function displayTable() {
-  let table = log(
-    asTable(
-      displayTableData.map((item) => {
-        let color = item.profit > 0 ? ansicolor.green : ansicolor.red;
-        return {
-          time: item.time,
-          symbol: item.symbol,
-          profit: color(item.profit),
-        };
-      })
-    )
-  );
 }
 // Checking if the exchange has fetchTickers functionality
 async function checkRequirements() {
@@ -174,17 +142,19 @@ async function callAfterSeconds(func) {
       await func();
       resolve();
     }, wait_time * 1000);
+    console.log(
+      "--------------------------------------------------------------------------------------------------------"
+    );
   });
 }
-
 // The Main function
 async function main() {
+  clc();
   await checkRequirements();
   console.log("Starting Bot.......");
   while (true) {
     try {
       await callAfterSeconds(ArbitrageSoftwareBot);
-      await callAfterSeconds(displayTable);
     } catch (e) {
       console.log(e);
     }
