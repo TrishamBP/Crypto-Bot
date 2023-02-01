@@ -1,7 +1,5 @@
 // Imports
 const ccxt = require("ccxt"),
-  asTable = require("as-table"),
-  log = require("ololog").configure({ locate: false }),
   { ansicolor } = require("ansicolor").nice;
 const config = require("../../../config/ArbitrageSpot.json");
 const clc = require("cli-clear");
@@ -111,7 +109,6 @@ async function ArbitrageSoftwareBot() {
         console.log("Orders Executed Successfully");
       }
     } else {
-      let table = "Time(ms)\tSymbol\tProfit\tMessage\n";
       let color = profit > 0 ? ansicolor.green : ansicolor.red;
       let time_now = Date.now() * 1000;
       console.log(
