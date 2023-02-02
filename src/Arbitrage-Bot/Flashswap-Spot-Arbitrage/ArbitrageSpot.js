@@ -14,14 +14,14 @@ const paper_trading = true; // set to false to actually execute trades
 // Exchanges to look for arbitrage opportunities
 // To execute trades provide API_KEYS and Secret as paramters while to trade
 const exchanges = [
-  new ccxt.okx(),
-  new ccxt.bybit({ options: { defaultType: "spot" } }),
-  new ccxt.binance(),
-  new ccxt.kucoin(),
-  new ccxt.bitmart(),
-  new ccxt.gate(),
-  new ccxt.huobi(),
-  new ccxt.coinbase({
+  new ccxt.pro.okx(),
+  new ccxt.pro.bybit({ options: { defaultType: "spot" } }),
+  new ccxt.pro.binance(),
+  new ccxt.pro.kucoin(),
+  new ccxt.pro.bitmart(),
+  new ccxt.pro.gate(),
+  new ccxt.pro.huobi(),
+  new ccxt.pro.coinbasepro({
     apiKey: config.Arbitrage.Exchanges.Coinbase.API_KEY,
     secret: config.Arbitrage.Exchanges.Coinbase.API_SECRET,
   }),
