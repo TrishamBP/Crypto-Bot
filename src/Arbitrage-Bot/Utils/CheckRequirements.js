@@ -18,14 +18,14 @@ async function checkRequirements() {
         // check if we have created an instance of this exchange already
         exchange = exchanges[exchangeId];
         if (exchangeId == "coinbase") {
-          exchange = new ccxt.coinbase({
+          exchange = new ccxt.pro.coinbasepro({
             apiKey: config.Arbitrage.Exchanges.Coinbase.API_KEY,
             secret: config.Arbitrage.Exchanges.Coinbase.API_SECRET,
           });
         } else {
           if (exchange === undefined) {
             // create the exchange instance
-            exchange = new ccxt[exchangeId]();
+            exchange = new ccxt.pro[exchangeId]();
             // Right now manually adding coinbase api
           }
         }
