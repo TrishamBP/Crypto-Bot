@@ -102,4 +102,7 @@ module.exports = async function arbitrageSoftwareBotNormalProfit(
       );
     }
   }
+  console.log(
+    "------------------------------------------------------------------------------"
+  );
 };
