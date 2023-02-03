@@ -18,7 +18,7 @@ const exchanges = [
   new ccxt.bybit({ options: { defaultType: "spot" } }),
   new ccxt.binance(),
   new ccxt.kucoin(),
-  new ccxt.bitmart(),
+  new ccxt.bitmart({ enableRateLimit: true }),
   new ccxt.gate(),
   new ccxt.huobi(),
   new ccxt.coinbase({
